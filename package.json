@@ -1,0 +1,30 @@
+{
+  "name": "vidhost-koa",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "author": "Xylem",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "bookshelf": "^0.10.3",
+    "busboy": "^0.2.14",
+    "content-range": "^1.1.0",
+    "http-range-parse": "^1.0.0",
+    "knex": "^0.13.0",
+    "koa": "^2.2.0",
+    "koa-bodyparser": "^4.2.0",
+    "koa-ctx-paginate": "0.0.2",
+    "koa-passport": "^3.0.0",
+    "koa-router": "^7.2.0",
+    "koa-session": "^5.0.0",
+    "lodash": "^4.17.4",
+    "passport-google-oauth20": "^1.0.0",
+    "pg": "^6.2.2",
+    "uuid": "^3.0.1"
+  }
+}
