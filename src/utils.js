@@ -1,5 +1,10 @@
 'use strict';
 
+const Promise = require('bluebird');
+const exec = Promise.promisify(require('child_process').exec);
+const fs = Promise.promisifyAll(require('fs'));
+const Video = require('./models/video');
+
 function getResourceByIDFactory(resourceModel) {
     return async function (ctx) {
         const resource = await resourceModel.where('id', ctx.params.id).fetch();
@@ -65,8 +70,49 @@ function range({ unit = 'bytes', maxChunkSize = 5242880 /* 5MB */} = {}) {
     };
 }
 
+const RESOLUTIONS = {
+    720: '1280x720',
+    360: '640x360'
+};
+
+async function processVideo(ctx, videoModel) {
+    let stats;
+    try {
+        stats = await fs.statAsync(videoModel.path);
+    } catch (e) {
+        ctx.throw(400, 'Video file missing!');
+    }
+
+    videoModel.size = stats.size;
+
+    const video = Video.forge(videoModel);
+
+    await video.save();
+
+    const processingCommand = [ `ffmpeg -y -i ${videoModel.path}` ];
+
+    for (const resolution in RESOLUTIONS) {
+        processingCommand.push(`-s ${RESOLUTIONS[resolution]} -f mp4 -strict -2 -acodec aac -vcodec libx264 ${videoModel.path}_${resolution}`);
+    }
+
+    await exec(processingCommand.join(' '));
+
+    for (const resolution in RESOLUTIONS) {
+        try {
+            stats = await fs.statAsync(`${videoModel.path}_${resolution}`);
+
+            await video.related('videoFormats').create({
+                size: stats.size,
+                resolution: resolution
+            });
+        } catch (e) {
+        }
+    }
+}
+
 module.exports = {
     getResourceByIDFactory,
     verifyAuthenticated,
-    range
+    range,
+    processVideo
 };

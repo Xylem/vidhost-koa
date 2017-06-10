@@ -7,6 +7,13 @@ CREATE TABLE videos (
     size bigint
 );
 
+CREATE TABLE video_formats (
+    id serial NOT NULL PRIMARY KEY,
+    video_id integer NOT NULL,
+    resolution varchar(6),
+    size bigint
+);
+
 CREATE TABLE comments (
     id serial NOT NULL PRIMARY KEY,
     video_id integer NOT NULL,

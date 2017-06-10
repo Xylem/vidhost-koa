@@ -55,16 +55,7 @@ router.post('/', utils.verifyAuthenticated, async ctx => {
 
     await busboyPromise;
 
-    let stats;
-    try {
-        stats = await fs.statAsync(video.path);
-    } catch (e) {
-        ctx.throw(400, 'Video file missing!');
-    }
-
-    video.size = stats.size;
-
-    await Video.forge(video).save();
+    await utils.processVideo(ctx, video);
 
     ctx.status = 201;
 });
@@ -88,6 +79,27 @@ router.get('/:id/stream', utils.range(), async ctx => {
     }
 
     ctx.body = fs.createReadStream(video.get('path'), readOptions);
+});
+
+router.get('/:id/stream/:resolution', utils.range(), async ctx => {
+    const video = await getVideoByID(ctx);
+    const format = await video.videoFormats().query('where', {resolution: ctx.params.resolution}).fetchOne();
+
+    if (!format) {
+        ctx.throw(404);
+    }
+
+    const readOptions = {};
+
+    if (ctx.range) {
+        const videoSize = parseInt(format.get('size'), 10);
+        ctx.range.length = videoSize;
+
+        readOptions.start = ctx.range.start;
+        readOptions.end = Math.min(ctx.range.end, videoSize - 1);
+    }
+
+    ctx.body = fs.createReadStream(`${video.get('path')}_${format.get('resolution')}`, readOptions);
 });
 
 router.get('/:id/comments', async ctx => {
